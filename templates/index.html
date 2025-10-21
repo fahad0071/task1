@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Travel Info Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f7f9fc; }
+        .card { border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header { background: #007bff; color: white; padding: 20px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="header text-center mb-4">
+        <h2>🌍 Smart Travel Info Portal</h2>
+        <p>Get country details, currency conversion, and temperature insights using SOAP Web Services</p>
+    </div>
+
+    <div class="card p-4">
+        <form id="countryForm">
+            <div class="mb-3">
+                <label for="country" class="form-label">Country Name:</label>
+                <input type="text" class="form-control" id="country" placeholder="e.g. Finland" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="target_currency" class="form-label">Convert Currency To:</label>
+                <select id="target_currency" class="form-select">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Get Travel Info</button>
+        </form>
+    </div>
+
+    <div id="result" class="mt-4"></div>
+</div>
+
+<script>
+document.getElementById("countryForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const country = document.getElementById("country").value;
+    const target_currency = document.getElementById("target_currency").value;
+
+    const response = await fetch("/country-info", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({country, target_currency})
+    });
+
+    const data = await response.json();
+    if (data.error) {
+        document.getElementById("result").innerHTML = `<div class='alert alert-danger'>${data.error}</div>`;
+        return;
+    }
+    document.getElementById("result").innerHTML = `
+        <div class="card p-3 mt-3">
+            <h4>${data.country}</h4>
+            <p><strong>Capital:</strong> ${data.capital}</p>
+            <p><strong>Currency:</strong> ${data.currency}</p>
+            <p><strong>Conversion:</strong> ${data.converted_value}</p>
+            <p><strong>Average Temp:</strong> ${data.average_temp}</p>
+            <p><strong>Continent:</strong> ${data.continent}</p>
+        </div>
+    `;
+});
+</script>
+</body>
+</html>
