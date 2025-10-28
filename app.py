@@ -8,6 +8,7 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
+
 @app.route('/country-info', methods=['POST'])
 def country_info():
     data = request.get_json()
@@ -19,6 +20,7 @@ def country_info():
     country_client = Client(country_wsdl)
 
     try:
+        # CountryInfo service expects ISO country code (first 2 letters usually)
         country_info = country_client.service.FullCountryInfo(country_name[:2].upper())
     except Exception:
         return jsonify({'error': 'Invalid country or service unavailable'})
@@ -28,27 +30,18 @@ def country_info():
     currency = country_info.sCurrencyISOCode
     continent = country_info.sContinentCode
 
-    # SOAP 2 - Currency Conversion (Simulated for demo)
-    # try:
-    #     converted_value = f"1 {currency} ≈ simulated {target_currency} rate"
-    # except Exception:
-    #     converted_value = "Conversion unavailable"
-    # SOAP 2 - Currency Conversion (using REST API)
-    # REST API - Currency Conversion (robust version)
+    # REST API - Currency Conversion (Frankfurter.app - Free and No Auth)
     try:
         if not currency or len(currency) != 3:
             converted_value = "Invalid or missing currency code"
         else:
             response = requests.get(
-                f"https://api.exchangerate.host/convert?from={currency}&to={target_currency}"
+                f"https://api.frankfurter.app/latest?from={currency}&to={target_currency}"
             )
             data = response.json()
-            print("🔍 Currency API Response:", data)  # debug output
-            if 'info' in data and 'rate' in data['info']:
-                rate = data['info']['rate']
-                converted_value = f"1 {currency} = {rate:.2f} {target_currency}"
-            elif 'result' in data:
-                rate = data['result']
+            print("🔍 Currency API Response:", data)
+            rate = data.get("rates", {}).get(target_currency)
+            if rate:
                 converted_value = f"1 {currency} = {rate:.2f} {target_currency}"
             else:
                 converted_value = "Conversion unavailable"
@@ -56,17 +49,17 @@ def country_info():
         print("❌ Currency Conversion Error:", e)
         converted_value = "Conversion unavailable"
 
-
-
-    # SOAP 3 - Temperature service (Demo example)
+    # SOAP 3 - Temperature conversion example (demo)
     try:
         temp_wsdl = "https://www.w3schools.com/xml/tempconvert.asmx?WSDL"
         temp_client = Client(temp_wsdl)
-        avg_temp_c = 10.0  # mock data
+        avg_temp_c = 10.0  # Mock average temperature for demo
         avg_temp_f = temp_client.service.CelsiusToFahrenheit(str(avg_temp_c))
     except Exception:
+        avg_temp_c = "N/A"
         avg_temp_f = "Unavailable"
 
+    # Return combined response
     return jsonify({
         'country': country_name,
         'capital': capital,
@@ -75,6 +68,7 @@ def country_info():
         'average_temp': f"{avg_temp_c}°C / {avg_temp_f}°F",
         'continent': continent
     })
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
