@@ -29,10 +29,24 @@ def country_info():
     continent = country_info.sContinentCode
 
     # SOAP 2 - Currency Conversion (Simulated for demo)
+    # try:
+    #     converted_value = f"1 {currency} ≈ simulated {target_currency} rate"
+    # except Exception:
+    #     converted_value = "Conversion unavailable"
+    # SOAP 2 - Currency Conversion (using REST API)
     try:
-        converted_value = f"1 {currency} ≈ simulated {target_currency} rate"
+        response = requests.get(
+            f"https://api.exchangerate.host/convert?from={currency}&to={target_currency}"
+        )
+        data = response.json()
+        if data.get('success', False):
+            rate = data['info']['rate']
+            converted_value = f"1 {currency} = {rate:.2f} {target_currency}"
+        else:
+            converted_value = "Conversion unavailable"
     except Exception:
         converted_value = "Conversion unavailable"
+
 
     # SOAP 3 - Temperature service (Demo example)
     try:
