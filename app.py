@@ -34,18 +34,28 @@ def country_info():
     # except Exception:
     #     converted_value = "Conversion unavailable"
     # SOAP 2 - Currency Conversion (using REST API)
+    # REST API - Currency Conversion (robust version)
     try:
-        response = requests.get(
-            f"https://api.exchangerate.host/convert?from={currency}&to={target_currency}"
-        )
-        data = response.json()
-        if data.get('success', False):
-            rate = data['info']['rate']
-            converted_value = f"1 {currency} = {rate:.2f} {target_currency}"
+        if not currency or len(currency) != 3:
+            converted_value = "Invalid or missing currency code"
         else:
-            converted_value = "Conversion unavailable"
-    except Exception:
+            response = requests.get(
+                f"https://api.exchangerate.host/convert?from={currency}&to={target_currency}"
+            )
+            data = response.json()
+            print("🔍 Currency API Response:", data)  # debug output
+            if 'info' in data and 'rate' in data['info']:
+                rate = data['info']['rate']
+                converted_value = f"1 {currency} = {rate:.2f} {target_currency}"
+            elif 'result' in data:
+                rate = data['result']
+                converted_value = f"1 {currency} = {rate:.2f} {target_currency}"
+            else:
+                converted_value = "Conversion unavailable"
+    except Exception as e:
+        print("❌ Currency Conversion Error:", e)
         converted_value = "Conversion unavailable"
+
 
 
     # SOAP 3 - Temperature service (Demo example)
